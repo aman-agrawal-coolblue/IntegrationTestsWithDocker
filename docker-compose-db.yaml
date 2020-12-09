@@ -1,0 +1,13 @@
+version: "3.8"
+services:  
+  int-test-db-2:
+    image: mysql:latest
+    container_name: int-test-db-2
+    environment: 
+      MYSQL_ROOT_PASSWORD: pass123
+      MYSQL_USER: root
+    restart: on-failure
+    ports: 
+      - "3306:3306"
+    volumes:
+      - ./database/:/docker-entrypoint-initdb.d/

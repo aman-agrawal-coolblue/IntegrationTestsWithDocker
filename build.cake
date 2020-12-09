@@ -36,16 +36,7 @@ Task("IntegrationTest")
         }))
     {
         process.WaitForExit();
-        Information($"Process exited with: {process.GetExitCode()}");
-
-        // while(!IsDBContainerReady())
-        // {
-        //     Information("Database container not ready yet...");
-        //     System.Threading.Thread.Sleep(10_000);
-        // }
-
-        // Information("DB container is ready!"); 
-        System.Threading.Thread.Sleep(25_000);
+        Information($"Process exited with: {process.GetExitCode()}");        
 
         try
         {

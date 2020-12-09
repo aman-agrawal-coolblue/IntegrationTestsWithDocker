@@ -15,56 +15,32 @@ namespace App.IntegrationTests
         }
 
         [Fact]
-        public void Test1()
+        public async Task TestGetCount()
         {
-            using (var connection = new MySqlConnection(
-                "Server=127.0.0.1;Database=MyTestDB;Port=3306;Uid=root;Password=pass123"))
-            {
-                connection.Open();
-                Assert.True(connection.State == System.Data.ConnectionState.Open);
-            }
-        }
-
-        [Fact]
-        public async Task Test2()
-        {
-            using (var connection = new MySqlConnection(
-                "Server=127.0.0.1;Database=MyTestDB;Port=3306;Uid=root;Password=pass123"))
-            {
-                connection.Open();
-                var cmd = connection.CreateCommand();
-                cmd.CommandText = "insert into MyTestDB.Products values (1, 100)";
-                await cmd.ExecuteNonQueryAsync();
-
-                var cmdSelect = connection.CreateCommand();
-                cmdSelect.CommandText = "select count(*) from MyTestDB.Products";
-                var rows = (long)await cmdSelect.ExecuteScalarAsync();
-                Assert.True(rows == 1);
-            }
+            var rows = await new RepositoryAdapter(() => fixture.Connection).GetCount();
+            Assert.True(rows == 1);
         }
     }
 
-    public class DBFixture : IDisposable
+    public class RepositoryAdapter
     {
-        public DBFixture()
+        private readonly Func<MySqlConnection> connectionFactory;
+
+        public RepositoryAdapter(Func<MySqlConnection> connectionFactory)
         {
-            CleanUpDatabase();
+            this.connectionFactory = connectionFactory;
         }
 
-        public void Dispose()
+        public async Task<long> GetCount()
         {
-            CleanUpDatabase();
-        }
-
-        private void CleanUpDatabase()
-        {
-            using (var connection = new MySqlConnection(
-                "Server=127.0.0.1;Database=MyTestDB;Port=3306;Uid=root;Password=pass123"))
+            using (var conn = connectionFactory())
             {
-                connection.Open();
-                var cmd = connection.CreateCommand();
-                cmd.CommandText = "delete from MyTestDB.Products";
-                cmd.ExecuteNonQuery();
+                conn.Open();
+                var cmdSelect = conn.CreateCommand();
+                cmdSelect.CommandText = "select count(*) from MyTestDB.Products";
+                var rows = (long)await cmdSelect.ExecuteScalarAsync();
+
+                return rows;
             }
         }
     }

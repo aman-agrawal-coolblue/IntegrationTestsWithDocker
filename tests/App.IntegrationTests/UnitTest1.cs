@@ -17,8 +17,16 @@ namespace App.IntegrationTests
         [Fact]
         public async Task TestGetCount()
         {
+            var productTable = new ProductTableFacade(fixture.Connection);
+            var product = new Product
+                    {
+                        ProductId = RandomIdGenerator.GetId()
+                    };
+            
+            productTable.CreateTestProduct(product);
             var rows = await new RepositoryAdapter(() => fixture.Connection).GetCount();
-            Assert.True(rows == 1);
+            Assert.True(rows > 0);
+            productTable.Delete(product.ProductId);
         }
     }
 

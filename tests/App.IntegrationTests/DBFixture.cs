@@ -12,25 +12,6 @@ namespace App.IntegrationTests
         public DBFixture()
         {
             Connection = TryEstablishingConnection();
-            SetupTestData();
-        }
-
-        private void SetupTestData()
-        {
-            if (Connection.State != ConnectionState.Open)
-                Connection.Open();
-
-            try
-            {
-                var cmd = Connection.CreateCommand();
-                cmd.CommandText = "insert into MyTestDB.Products values (1, 100)";
-                cmd.ExecuteNonQuery();
-            }
-            catch (Exception) { }
-            finally
-            {
-                Connection.Close();
-            }
         }
 
         private MySqlConnection TryEstablishingConnection()
@@ -67,5 +48,16 @@ namespace App.IntegrationTests
                 cmd.ExecuteNonQuery();
             }
         }
+    }
+
+    public static class RandomIdGenerator
+    {
+        static Random rng;
+        static RandomIdGenerator()
+        {
+            rng = new Random();
+        }
+
+        public static int GetId() => rng.Next(1,int.MaxValue-1);
     }
 }

@@ -3,9 +3,9 @@ using Polly;
 using System;
 using System.Data;
 
-namespace App.IntegrationTests
+namespace IntegrationTestsWithDocker.Database
 {
-    public class DBFixture : IDisposable
+    public class DBFixture: IDisposable
     {
         public MySqlConnection Connection { get; private set; }
 
@@ -48,16 +48,5 @@ namespace App.IntegrationTests
                 cmd.ExecuteNonQuery();
             }
         }
-    }
-
-    public static class RandomIdGenerator
-    {
-        static Random rng;
-        static RandomIdGenerator()
-        {
-            rng = new Random();
-        }
-
-        public static int GetId() => rng.Next(1,int.MaxValue-1);
     }
 }

@@ -1,9 +1,4 @@
-﻿using Dapper;
-using Dapper.Contrib.Extensions;
-using MySql.Data.MySqlClient;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using IntegrationTestsWithDocker.Database;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -21,70 +16,25 @@ namespace App.IntegrationTests
         [Fact]
         public async Task TestGetAll()
         {
-            var productTable = new ProductTableFacade(fixture.Connection);
-            var productId1 = RandomIdGenerator.GetId();
-            var productId2 = productId1 + 1;
-            
-            productTable.CreateTestProduct(
-                    new Product
+            var product1 = new Product
                     {
-                        ProductId = productId1
-                    });
-
-            productTable.CreateTestProduct(
-                    new Product
+                        ProductId = RandomIdGenerator.GetId()
+                    };
+            var product2 = new Product
                     {
-                        ProductId = productId2
-                    });
+                        ProductId = product1.ProductId + 1
+                    };
+            var sut = new RepositoryAdapter(fixture);
 
-            var rows1 = await new Repository2Adapter(() => fixture.Connection).GetCountOf(productId1);
-            var rows2 = await new Repository2Adapter(() => fixture.Connection).GetCountOf(productId2);
+            await sut.CreateTestProduct(product1);
+            await sut.CreateTestProduct(product2);
+            var rows1 = await sut.GetCountOf(product1.ProductId);
+            var rows2 = await sut.GetCountOf(product2.ProductId);
 
-            Assert.True(rows1 == 1, $"Expected 1 row for product1 {productId1} found {rows1}");
-            Assert.True(rows2 == 1, $"Expected 1 row for product2 {productId2} found {rows2}");
-            productTable.Delete(productId1);
-            productTable.Delete(productId2);
+            Assert.True(rows1 == 1, $"Expected 1 row for product1 {product1.ProductId} found {rows1}");
+            Assert.True(rows2 == 1, $"Expected 1 row for product2 {product2.ProductId} found {rows2}");
+            await sut.Delete(product1.ProductId);
+            await sut.Delete(product2.ProductId);
         }
-    }
-
-    public class Repository2Adapter
-    {
-        private readonly Func<MySqlConnection> connectionFactory;
-
-        public Repository2Adapter(Func<MySqlConnection> connectionFactory)
-        {
-            this.connectionFactory = connectionFactory;
-        }
-
-        public async Task<IReadOnlyCollection<Product>> GetAll()
-        {
-            using (var conn = connectionFactory())
-            {
-                conn.Open();
-                var rows = await conn.QueryAsync<Product>("select * from MyTestDB.Products");
-
-                return rows.ToList();
-            }
-        }
-
-        public async Task<long> GetCountOf(int productId)
-        {
-            using (var conn = connectionFactory())
-            {
-                conn.Open();
-                var cmdSelect = conn.CreateCommand();
-                cmdSelect.CommandText = $"select count(*) from MyTestDB.Products where ProductId = {productId}";
-                var rows = (long)await cmdSelect.ExecuteScalarAsync();
-
-                return rows;
-            }
-        }
-    }
-
-    [Table("Products")]
-    public class Product
-    {
-        [ExplicitKey]
-        public int ProductId { get; set; }
     }
 }
